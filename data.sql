@@ -21,8 +21,6 @@
 20. Access(aadhar, username)
 */
 
---CREATE DATABASE hostel_mgmt;
-
 --Queries to create the required tables
 
 -- 01
@@ -50,22 +48,6 @@ INSERT INTO Person VALUES
 	('123456789023', 'Lakshmi Iyer', 25, '1999-08-25', '9766543221', '23, Daffodil, Station Road, 686002')
 ;
 
--- 03
-CREATE TABLE Guardian (
-    guardian_mob CHAR(10) PRIMARY KEY,
-    guardian_name VARCHAR(90) NOT NULL
-);
-
-INSERT INTO Guardian VALUES
-	('9123456789', 'Kumar Nair'),
-	('9123456790', 'Shiva Varma'),
-	('9123456792', 'Vishnu Iyer'),
-	('9123456795', 'Ram Mohan'),
-	('9123456796', 'Kiran K'),
-	('9123456799', 'Suresh N'),
-	('9123456700', 'Suma M')
-;
-
 -- 02
 CREATE TABLE Hosteller (
     aadhar CHAR(12) PRIMARY KEY,
@@ -86,6 +68,22 @@ INSERT INTO Hosteller VALUES
 	('123456789023', '9123456700', '2021-02-22')
 ;
 
+-- 03
+CREATE TABLE Guardian (
+    guardian_mob CHAR(10) PRIMARY KEY,
+    guardian_name VARCHAR(90) NOT NULL
+);
+
+INSERT INTO Guardian VALUES
+	('9123456789', 'Kumar Nair'),
+	('9123456790', 'Shiva Varma'),
+	('9123456792', 'Vishnu Iyer'),
+	('9123456795', 'Ram Mohan'),
+	('9123456796', 'Kiran K'),
+	('9123456799', 'Suresh N'),
+	('9123456700', 'Suma M')
+;
+
 -- 04
 CREATE TABLE Staff (
     aadhar CHAR(12) PRIMARY KEY,
@@ -99,6 +97,18 @@ INSERT INTO Staff VALUES
     ('123456789017', 'Plumber'),
     ('123456789021', 'Security')
 ;
+
+-- 05
+CREATE TABLE Building (
+    building_id SERIAL PRIMARY KEY,
+    building_name VARCHAR(50) NOT NULL UNIQUE,
+    total_rooms SMALLINT CHECK (total_rooms > 0)
+);
+
+INSERT INTO Building (building_name, total_rooms) VALUES
+    ('A Block', 10),
+    ('B Block', 15),
+    ('C Block', 20);
 
 -- 06
 CREATE TABLE Room (
@@ -164,25 +174,6 @@ INSERT INTO Gets VALUES
 	('123456789022', '205', '2')
 ;
 
--- 09
-CREATE TABLE Bill_Issue (
-    issue_date DATE PRIMARY KEY,
-    due_date DATE NOT NULL
-);
-
-INSERT INTO Bill_Issue VALUES
-	('2024-01-05', '2024-01-20'),
-	('2024-02-10', '2024-02-25'),
-	('2024-03-05', '2024-03-20'),
-	('2024-04-10', '2024-04-25'),
-	('2024-05-05', '2024-05-20'),
-	('2024-06-10', '2024-06-25'),
-	('2024-07-05', '2024-07-20'),
-	('2024-08-10', '2024-08-25'),
-	('2024-09-05', '2024-09-20'),
-	('2024-10-10', '2024-10-25')
-;
-
 -- 08
 CREATE TABLE Bill (
     Bill_no CHAR(8) PRIMARY KEY,
@@ -203,6 +194,25 @@ INSERT INTO Bill VALUES
 	('BIL008', 2300.00, '2024-08-10', '2024-08-19'),
 	('BIL009', 1600.00, '2024-09-05', '2024-09-23'),
 	('BIL010', 2500.00, '2024-10-10', '2024-10-27')
+;
+
+-- 09
+CREATE TABLE Bill_Issue (
+    issue_date DATE PRIMARY KEY,
+    due_date DATE NOT NULL
+);
+
+INSERT INTO Bill_Issue VALUES
+	('2024-01-05', '2024-01-20'),
+	('2024-02-10', '2024-02-25'),
+	('2024-03-05', '2024-03-20'),
+	('2024-04-10', '2024-04-25'),
+	('2024-05-05', '2024-05-20'),
+	('2024-06-10', '2024-06-25'),
+	('2024-07-05', '2024-07-20'),
+	('2024-08-10', '2024-08-25'),
+	('2024-09-05', '2024-09-20'),
+	('2024-10-10', '2024-10-25')
 ;
 
 -- 10
@@ -429,16 +439,3 @@ INSERT INTO Access VALUES
 	('123456789022', 'deepak_jain'),
 	('123456789023', 'lakshmi_iyer')
 ;
-
--- 05
-CREATE TABLE Building (
-    building_id SERIAL PRIMARY KEY,
-    building_name VARCHAR(50) NOT NULL UNIQUE,
-    total_rooms SMALLINT CHECK (total_rooms > 0)
-);
-
--- Sample data entries for Building
-INSERT INTO Building (building_name, total_rooms) VALUES
-    ('A Block', 10),
-    ('B Block', 15),
-    ('C Block', 20);
