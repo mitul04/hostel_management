@@ -2,9 +2,6 @@
 
 **A comprehensive digital solution for managing hostel operations, including room allocation, fee tracking, and student records.**
 
-### 📄 [Click Here to View Full Documentation (PDF)](README.pdf)
-
----
 
 ### 🚀 Overview
 This project refactors a legacy group assignment into a modern, modular Python application. It replaces manual record-keeping with a secure, database-backed system.
