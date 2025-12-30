@@ -1,38 +1,31 @@
-/* Relational Schemas
-01. Person(aadhar, name, age, dob, mobile, house_no, house_name, street, pincode)
-02. Pincode(pincode, district)
-03. District(district, state)
-04. State(pincode, state)
-05. Hosteller(aadhar, guardian_mob, join_date)
-06. Guardian(guardian_mob, guardian_name)
-07. Staff(aadhar, role)
-08. Room(Room_no, building_no, floor ,bed_count, wifi_available, bath_attached, ac_available )
-09. Gets(aadhar, room_no, building_no)
-10. Bill(Bill_no, amount, issue_date, paid_date)
-11. Bill_Issue(issue_date, due_date)
-12. pays(Bill_no, aadhar)
-13. Complaint(Complaint_no, Date, Status, Message)
-14. MessageType(Message, type)
-15. Raises(Complaint_no, aadhar)
-16. Deals_with(complaint_no, aadhar)
-17. Mess(Food_id , Food_name)
-18. Food(Food_name, Food_type)
-19. Attends(aadhar, Food_id, Date ,time)
-20. Notice(notice_no, message, date)
-21. Issues(notice_no, aadhar)
-22. Login(username, person_type, password, last_login)
-23. Access(aadhar, username)
+/* Relational Schemas (Corrected & Normalized)
+01. Person(aadhar, name, age, dob, mobile, address)
+02. Hosteller(aadhar, guardian_mob, join_date)
+03. Guardian(guardian_mob, guardian_name)
+04. Staff(aadhar, role)
+05. Building(building_id, building_name, total_rooms)
+06. Room(Room_no, building_no, floor, bed_count, wifi_available, bath_attached, ac_available)
+07. Gets(aadhar, room_no, building_no)
+08. Bill(Bill_no, amount, issue_date, paid_date)
+09. Bill_Issue(issue_date, due_date)
+10. Pays(Bill_no, aadhar)
+11. Complaint(Complaint_no, Date, Status, Message)
+12. MessageType(Message, type)
+13. Raises(Complaint_no, aadhar)
+14. Deals_with(complaint_no, aadhar)
+15. Mess(Food_id, Food_name, Food_type)
+16. Attends(aadhar, Food_id, Date, time)
+17. Notice(notice_no, message, date)
+18. Issues(notice_no, aadhar)
+19. Login(username, person_type, password, last_login)
+20. Access(aadhar, username)
 */
 
 --CREATE DATABASE hostel_mgmt;
 
 --Queries to create the required tables
 
---03
---02
-
---01
-
+-- 01
 CREATE TABLE Person (
     aadhar CHAR(12) PRIMARY KEY CHECK(aadhar BETWEEN '100000000000' AND '999999999999'),
     name VARCHAR(60) NOT NULL,
@@ -57,9 +50,7 @@ INSERT INTO Person VALUES
 	('123456789023', 'Lakshmi Iyer', 25, '1999-08-25', '9766543221', '23, Daffodil, Station Road, 686002')
 ;
 
---04
-
---06
+-- 03
 CREATE TABLE Guardian (
     guardian_mob CHAR(10) PRIMARY KEY,
     guardian_name VARCHAR(90) NOT NULL
@@ -75,13 +66,13 @@ INSERT INTO Guardian VALUES
 	('9123456700', 'Suma M')
 ;
 
---05
+-- 02
 CREATE TABLE Hosteller (
     aadhar CHAR(12) PRIMARY KEY,
     guardian_mob CHAR(10),
     join_date DATE NOT NULL,
     FOREIGN KEY (aadhar) REFERENCES Person(aadhar),
-	FOREIGN KEY (guardian_mob) REFERENCES Guardian(guardian_mob)
+    FOREIGN KEY (guardian_mob) REFERENCES Guardian(guardian_mob)
 );
 
 INSERT INTO Hosteller VALUES
@@ -95,7 +86,7 @@ INSERT INTO Hosteller VALUES
 	('123456789023', '9123456700', '2021-02-22')
 ;
 
---07
+-- 04
 CREATE TABLE Staff (
     aadhar CHAR(12) PRIMARY KEY,
     role VARCHAR(50) NOT NULL,
@@ -103,13 +94,13 @@ CREATE TABLE Staff (
 );
 
 INSERT INTO Staff VALUES
-	('123456789014', 'Cook'),
-	('123456789016', 'Electrician'),
-	('123456789017', 'Plumber'),
-	('123456789021', 'Security')
+    ('123456789014', 'Cook'),
+    ('123456789016', 'Electrician'),
+    ('123456789017', 'Plumber'),
+    ('123456789021', 'Security')
 ;
 
---08
+-- 06
 CREATE TABLE Room (
     Room_no CHAR(3) NOT NULL,
     building_no CHAR(1) NOT NULL,
@@ -149,7 +140,7 @@ INSERT INTO Room VALUES
 
 ;
 
---09
+-- 07
 CREATE TABLE Gets (
     aadhar CHAR(12) NOT NULL,
     room_no CHAR(3) NOT NULL,
@@ -173,7 +164,7 @@ INSERT INTO Gets VALUES
 	('123456789022', '205', '2')
 ;
 
---11
+-- 09
 CREATE TABLE Bill_Issue (
     issue_date DATE PRIMARY KEY,
     due_date DATE NOT NULL
@@ -192,13 +183,13 @@ INSERT INTO Bill_Issue VALUES
 	('2024-10-10', '2024-10-25')
 ;
 
---10
+-- 08
 CREATE TABLE Bill (
     Bill_no CHAR(8) PRIMARY KEY,
     amount DECIMAL(6,2) CHECK (amount >= 0),
     issue_date DATE NOT NULL,
     paid_date DATE,
-	FOREIGN KEY (issue_date) REFERENCES Bill_Issue(issue_date)
+    FOREIGN KEY (issue_date) REFERENCES Bill_Issue(issue_date)
 );
 
 INSERT INTO Bill VALUES
@@ -214,7 +205,7 @@ INSERT INTO Bill VALUES
 	('BIL010', 2500.00, '2024-10-10', '2024-10-27')
 ;
 
---12
+-- 10
 CREATE TABLE Pays (
     Bill_no CHAR(8) PRIMARY KEY,
     aadhar CHAR(12) NOT NULL,
@@ -222,8 +213,7 @@ CREATE TABLE Pays (
     FOREIGN KEY (aadhar) REFERENCES Hosteller(aadhar)
 );
 
-INSERT INTO Pays (Bill_no, aadhar)
-VALUES
+INSERT INTO Pays (Bill_no, aadhar) VALUES
 	('BIL001', '123456789012'),
 	('BIL002', '123456789013'),
 	('BIL003', '123456789015'),
@@ -234,7 +224,7 @@ VALUES
 	('BIL008', '123456789023')
 ;
 
---13
+-- 11
 CREATE TABLE Complaint (
     Complaint_no CHAR(8) PRIMARY KEY,
     Date DATE NOT NULL,
@@ -255,7 +245,7 @@ INSERT INTO Complaint VALUES
 	('CMP010', '2024-06-25', 'pending', 'AC not cooling in Room 502')
 ;
 
---14
+-- 12
 CREATE TABLE MessageType (
     Message TEXT PRIMARY KEY,
     type VARCHAR(20)
@@ -274,7 +264,7 @@ INSERT INTO MessageType VALUES
 	('AC not cooling in Room 109', 'Maintenance')
 ;
 
---15
+-- 13
 CREATE TABLE Raises (
     Complaint_no CHAR(8) NOT NULL,
     aadhar CHAR(12) NOT NULL,
@@ -294,7 +284,7 @@ INSERT INTO Raises VALUES
 	('CMP008', '123456789013')
 ;
 
---16
+-- 14
 CREATE TABLE Deals_with (
     Complaint_no CHAR(8) NOT NULL,
     aadhar CHAR(12) NOT NULL,
@@ -314,7 +304,7 @@ INSERT INTO Deals_with VALUES
 	('CMP008', '123456789021')
 ;
 
---17
+-- 15
 CREATE TABLE Mess (
     Food_id CHAR(5) PRIMARY KEY,
     Food_name VARCHAR(90) NOT NULL,
@@ -334,7 +324,7 @@ INSERT INTO Mess VALUES
 	('F010', 'Sandwich','Dinner')
 ;
 
---19
+-- 16
 CREATE TABLE Attends (
     aadhar CHAR(12) NOT NULL,
     Food_id CHAR(5) NOT NULL,
@@ -357,7 +347,7 @@ INSERT INTO Attends VALUES
 	('123456789021', 'F010', '2024-01-05 19:30:00')
 ;
 
---20
+-- 17
 CREATE TABLE Notice (
     notice_no CHAR(8) PRIMARY KEY,
     message VARCHAR(300) NOT NULL,
@@ -375,7 +365,7 @@ INSERT INTO Notice VALUES
 	('NTC008', '123456789021', '2024-02-01')
 ;
 
---21
+-- 18
 CREATE TABLE Issues (
     notice_no CHAR(8) PRIMARY KEY,
     aadhar CHAR(12) NOT NULL,
@@ -394,7 +384,7 @@ INSERT INTO Issues VALUES
 	('NTC008', '123456789017')
 ;
 
---22
+-- 19
 CREATE TABLE Login (
     username VARCHAR(50) PRIMARY KEY,
     person_type VARCHAR(10) NOT NULL CHECK(person_type IN ('staff', 'hosteller')),
@@ -417,7 +407,7 @@ INSERT INTO Login VALUES
 	('lakshmi_iyer', 'hosteller', 'iyersecure', '2024-08-30 12:33:20')
 ;
 
---23
+-- 20
 CREATE TABLE Access (
     aadhar CHAR(12) PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
@@ -440,7 +430,7 @@ INSERT INTO Access VALUES
 	('123456789023', 'lakshmi_iyer')
 ;
 
-
+-- 05
 CREATE TABLE Building (
     building_id SERIAL PRIMARY KEY,
     building_name VARCHAR(50) NOT NULL UNIQUE,
@@ -452,5 +442,3 @@ INSERT INTO Building (building_name, total_rooms) VALUES
     ('A Block', 10),
     ('B Block', 15),
     ('C Block', 20);
-
-
