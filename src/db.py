@@ -7,7 +7,7 @@ DB_PARAMS = {
     'port': "5432",
     'database': "hostel_mgmt",
     'user': "postgres",
-    'password': "@Diablo60" # Your password
+    'password': "<password>" # Your password
 }
 
 def get_db_connection():

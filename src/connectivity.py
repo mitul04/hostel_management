@@ -5,7 +5,7 @@ import psycopg2
 db_params = {
     'dbname': 'hostel_mgmt',
     'user': 'postgres',
-    'password': 'xxxxxx',
+    'password': '<password>',  # Your password
     'host': 'localhost',  # or your database server address
     'port': '5432'        # default PostgreSQL port
 }
