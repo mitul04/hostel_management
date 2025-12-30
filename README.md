@@ -36,7 +36,7 @@ This project refactors a legacy group assignment into a modern, modular Python a
 
 3.  **Setup Database**
     * Import the provided SQL schema into your PostgreSQL database.
-    * Update `db.py` with your database credentials.
+    * Use your database credentials. See lines 6-10 of test/connectivity.py (to test connectivity) and lines 6-10 of src/db.py (the end-product)
 
 4.  **Run the App**
     ```bash
