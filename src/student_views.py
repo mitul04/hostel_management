@@ -4,14 +4,14 @@ import psycopg2
 from datetime import datetime
 import db
 
-# --- SHARED STYLES & HELPERS ---
+# --- SHARED BASE CLASS ---
 class BasePanel(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.pack_propagate(False)
         self.config(bg="#f0f0f0")
         
-        # Define styles
+        # Styles
         style = ttk.Style()
         style.theme_use('clam')
         style.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"), background="#bdc3c7")
@@ -26,42 +26,37 @@ class BasePanel(tk.Frame):
         lbl.pack(pady=15)
 
     def create_treeview(self, columns):
-        # Container for Treeview and Scrollbar
         frame = tk.Frame(self, bg="#f0f0f0")
         frame.pack(fill="both", expand=True, padx=20, pady=20)
-
-        # Scrollbar
+        
         scroll = ttk.Scrollbar(frame)
         scroll.pack(side="right", fill="y")
-
-        # Treeview
+        
         tree = ttk.Treeview(frame, columns=columns, show="headings", yscrollcommand=scroll.set)
         tree.pack(fill="both", expand=True)
-        
         scroll.config(command=tree.yview)
-
-        # Setup column headings
+        
         for col in columns:
             tree.heading(col, text=col)
-            tree.column(col, width=100, anchor="center") # Default width
-
+            tree.column(col, width=120, anchor="center")
+            
         return tree
+
+    def create_form_container(self):
+        frame = tk.Frame(self, bg="#f0f0f0")
+        frame.pack(pady=40)
+        return frame
 
 # --- VIEW PANELS (TABLES) ---
 
 class ViewComplaintsPanel(BasePanel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.create_header("VIEW COMPLAINTS")
-
-        # Define Columns
+        self.create_header("MY COMPLAINTS")
+        
         cols = ("ID", "Date", "Status", "Type", "Message")
         self.tree = self.create_treeview(cols)
-        
-        # Adjust specific column widths
-        self.tree.column("ID", width=50)
         self.tree.column("Message", width=300, anchor="w")
-
         self.load_data()
 
     def load_data(self):
@@ -82,15 +77,41 @@ class ViewComplaintsPanel(BasePanel):
         finally:
             conn.close()
 
+class ViewBillsPanel(BasePanel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.create_header("MY BILLS")
+
+        cols = ("Bill No", "Amount", "Issue Date", "Due Date", "Paid Date")
+        self.tree = self.create_treeview(cols)
+        self.load_data()
+
+    def load_data(self):
+        conn = db.get_db_connection()
+        if not conn: return
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT Bill.Bill_no, Bill.amount, Bill_Issue.issue_date, Bill_Issue.due_date, Bill.paid_date 
+                FROM Bill 
+                LEFT JOIN Bill_Issue ON Bill.issue_date = Bill_Issue.issue_date 
+                ORDER BY Bill.Bill_no;
+            """)
+            for row in cursor.fetchall():
+                self.tree.insert("", "end", values=row)
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+        finally:
+            conn.close()
+
 class ViewNoticesPanel(BasePanel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.create_header("NOTICE BOARD")
+        self.create_header("NOTICES")
 
         cols = ("Notice No", "Date", "Message")
         self.tree = self.create_treeview(cols)
         self.tree.column("Message", width=400, anchor="w")
-        
         self.load_data()
 
     def load_data(self):
@@ -106,66 +127,13 @@ class ViewNoticesPanel(BasePanel):
         finally:
             conn.close()
 
-class MessAttendancePanel(BasePanel):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.create_header("MESS ATTENDANCE LOG")
-
-        cols = ("Aadhar", "Name", "Date & Time", "Food ID")
-        self.tree = self.create_treeview(cols)
-        self.tree.column("Date & Time", width=150)
-
-        self.load_data()
-
-    def load_data(self):
-        conn = db.get_db_connection()
-        if not conn: return
-        try:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT P.AADHAR, P.NAME, A.DATE_and_time, A.FOOD_ID 
-                FROM ATTENDS A 
-                JOIN PERSON P ON A.AADHAR=P.AADHAR 
-                ORDER BY A.DATE_and_time DESC;
-            """)
-            for row in cursor.fetchall():
-                self.tree.insert("", "end", values=row)
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-        finally:
-            conn.close()
-
-class ViewMenuPanel(BasePanel):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.create_header("FOOD MENU")
-
-        cols = ("Food ID", "Item Name", "Type")
-        self.tree = self.create_treeview(cols)
-        
-        self.load_data()
-
-    def load_data(self):
-        conn = db.get_db_connection()
-        if not conn: return
-        try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM mess ORDER BY food_id;")
-            for row in cursor.fetchall():
-                self.tree.insert("", "end", values=row)
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-        finally:
-            conn.close()
-
 class ViewProfilePanel(BasePanel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.create_header("HOSTELLER PROFILES")
+        self.create_header("HOSTELLER DIRECTORY")
 
         cols = ("Name", "Aadhar", "Mobile", "Join Date")
         self.tree = self.create_treeview(cols)
-        
         self.load_data()
 
     def load_data(self):
@@ -186,104 +154,63 @@ class ViewProfilePanel(BasePanel):
         finally:
             conn.close()
 
+# --- ACTION PANELS (FORMS) ---
 
-# --- FORM PANELS (INPUTS) ---
-
-class IssueNoticePanel(BasePanel):
+class RaiseComplaintPanel(BasePanel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.create_header("ISSUE NEW NOTICE")
+        self.create_header("RAISE NEW COMPLAINT")
+        container = self.create_form_container()
 
-        container = tk.Frame(self, bg="#f0f0f0")
-        container.pack(pady=40)
-
-        # Fields
-        ttk.Label(container, text="Notice ID:").grid(row=0, column=0, padx=10, pady=10, sticky="e")
+        ttk.Label(container, text="Complaint ID:").grid(row=0, column=0, padx=10, pady=10, sticky="e")
         self.ent_id = ttk.Entry(container, width=30)
         self.ent_id.grid(row=0, column=1, padx=10, pady=10)
 
-        ttk.Label(container, text="Message:").grid(row=1, column=0, padx=10, pady=10, sticky="e")
-        self.ent_msg = ttk.Entry(container, width=30)
-        self.ent_msg.grid(row=1, column=1, padx=10, pady=10)
-
-        # Button
-        ttk.Button(container, text="Publish Notice", command=self.submit).grid(row=2, column=0, columnspan=2, pady=20)
-
-    def submit(self):
-        nid = self.ent_id.get()
-        msg = self.ent_msg.get()
-        if not nid or not msg:
-            messagebox.showwarning("Input Error", "All fields are required.")
-            return
-
-        conn = db.get_db_connection()
-        if not conn: return
-        try:
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO Notice (notice_no, message, date) VALUES (%s, %s, %s);", 
-                           (nid, msg, datetime.today()))
-            conn.commit()
-            messagebox.showinfo("Success", "Notice issued successfully!")
-            self.ent_id.delete(0, 'end')
-            self.ent_msg.delete(0, 'end')
-        except Exception as e:
-            messagebox.showerror("Database Error", str(e))
-        finally:
-            conn.close()
-
-class UpdateMenuPanel(BasePanel):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.create_header("ADD MENU ITEM")
-
-        container = tk.Frame(self, bg="#f0f0f0")
-        container.pack(pady=40)
-
-        ttk.Label(container, text="Food ID:").grid(row=0, column=0, padx=10, pady=10, sticky="e")
-        self.ent_id = ttk.Entry(container, width=30)
-        self.ent_id.grid(row=0, column=1, padx=10, pady=10)
-
-        ttk.Label(container, text="Item Name:").grid(row=1, column=0, padx=10, pady=10, sticky="e")
-        self.ent_name = ttk.Entry(container, width=30)
-        self.ent_name.grid(row=1, column=1, padx=10, pady=10)
-
-        ttk.Label(container, text="Type (Veg/Non-Veg):").grid(row=2, column=0, padx=10, pady=10, sticky="e")
+        ttk.Label(container, text="Type (e.g. Electric):").grid(row=1, column=0, padx=10, pady=10, sticky="e")
         self.ent_type = ttk.Entry(container, width=30)
-        self.ent_type.grid(row=2, column=1, padx=10, pady=10)
+        self.ent_type.grid(row=1, column=1, padx=10, pady=10)
 
-        ttk.Button(container, text="Add Item", command=self.submit).grid(row=3, column=0, columnspan=2, pady=20)
+        ttk.Label(container, text="Message:").grid(row=2, column=0, padx=10, pady=10, sticky="e")
+        self.ent_msg = ttk.Entry(container, width=30)
+        self.ent_msg.grid(row=2, column=1, padx=10, pady=10)
+
+        ttk.Button(container, text="Submit Complaint", command=self.submit).grid(row=3, column=0, columnspan=2, pady=20)
 
     def submit(self):
-        fid = self.ent_id.get()
-        fname = self.ent_name.get()
-        ftype = self.ent_type.get()
+        cid = self.ent_id.get()
+        ctype = self.ent_type.get().title()
+        msg = self.ent_msg.get().title()
 
-        if fid and fname and ftype:
+        if cid and ctype and msg:
             conn = db.get_db_connection()
             if not conn: return
             try:
                 cursor = conn.cursor()
-                cursor.execute("INSERT INTO MESS (food_id, food_name, food_type) VALUES (%s, %s, %s);", 
-                               (fid, fname, ftype))
+                # Insert Type if not exists (Simplified logic)
+                try:
+                    cursor.execute("INSERT INTO MessageType VALUES (%s, %s);", (msg, ctype))
+                except psycopg2.Error:
+                    conn.rollback() # Type might exist, ignore
+                
+                cursor.execute("INSERT INTO Complaint VALUES (%s, %s, %s, %s);", 
+                               (cid, datetime.today(), 'pending', msg))
                 conn.commit()
-                messagebox.showinfo("Success", "Menu item added!")
+                messagebox.showinfo("Success", "Complaint raised successfully!")
                 self.ent_id.delete(0, 'end')
-                self.ent_name.delete(0, 'end')
+                self.ent_msg.delete(0, 'end')
                 self.ent_type.delete(0, 'end')
             except Exception as e:
                 messagebox.showerror("Error", str(e))
             finally:
                 conn.close()
         else:
-            messagebox.showwarning("Error", "Please fill all fields.")
+            messagebox.showwarning("Error", "All fields required.")
 
 class UpdateComplaintPanel(BasePanel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.create_header("UPDATE COMPLAINT STATUS")
-
-        container = tk.Frame(self, bg="#f0f0f0")
-        container.pack(pady=40)
+        self.create_header("UPDATE COMPLAINT")
+        container = self.create_form_container()
 
         ttk.Label(container, text="Complaint ID:").grid(row=0, column=0, padx=10, pady=10, sticky="e")
         self.ent_id = ttk.Entry(container, width=30)
@@ -293,7 +220,7 @@ class UpdateComplaintPanel(BasePanel):
         self.ent_status = ttk.Entry(container, width=30)
         self.ent_status.grid(row=1, column=1, padx=10, pady=10)
 
-        ttk.Button(container, text="Update Status", command=self.submit).grid(row=2, column=0, columnspan=2, pady=20)
+        ttk.Button(container, text="Update", command=self.submit).grid(row=2, column=0, columnspan=2, pady=20)
 
     def submit(self):
         cid = self.ent_id.get()
@@ -306,7 +233,7 @@ class UpdateComplaintPanel(BasePanel):
                 cursor = conn.cursor()
                 cursor.execute("UPDATE Complaint SET Status = %s WHERE Complaint_no = %s;", (status, cid))
                 conn.commit()
-                messagebox.showinfo("Success", "Complaint updated.")
+                messagebox.showinfo("Success", "Status updated.")
                 self.ent_id.delete(0, 'end')
                 self.ent_status.delete(0, 'end')
             except Exception as e:
@@ -314,25 +241,60 @@ class UpdateComplaintPanel(BasePanel):
             finally:
                 conn.close()
         else:
-            messagebox.showwarning("Error", "Invalid ID or Status.")
+            messagebox.showwarning("Error", "Invalid Input.")
+
+class PayBillPanel(BasePanel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.create_header("PAY BILL")
+        container = self.create_form_container()
+
+        ttk.Label(container, text="Bill ID:").grid(row=0, column=0, padx=10, pady=10, sticky="e")
+        self.ent_id = ttk.Entry(container, width=30)
+        self.ent_id.grid(row=0, column=1, padx=10, pady=10)
+
+        ttk.Label(container, text="Amount:").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+        self.ent_amount = ttk.Entry(container, width=30)
+        self.ent_amount.grid(row=1, column=1, padx=10, pady=10)
+
+        ttk.Button(container, text="Pay Now", command=self.submit).grid(row=2, column=0, columnspan=2, pady=20)
+
+    def submit(self):
+        bid = self.ent_id.get()
+        amt = self.ent_amount.get()
+
+        if bid and amt:
+            conn = db.get_db_connection()
+            if not conn: return
+            try:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE Bill SET paid_date = %s WHERE Bill_no = %s;", (datetime.today(), bid))
+                conn.commit()
+                messagebox.showinfo("Success", "Bill Paid!")
+                self.ent_id.delete(0, 'end')
+                self.ent_amount.delete(0, 'end')
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+            finally:
+                conn.close()
+        else:
+            messagebox.showwarning("Error", "Enter Bill ID and Amount.")
 
 class UpdateProfilePanel(BasePanel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.create_header("UPDATE PROFILE CONTACT")
-
-        container = tk.Frame(self, bg="#f0f0f0")
-        container.pack(pady=40)
+        self.create_header("UPDATE PROFILE")
+        container = self.create_form_container()
 
         ttk.Label(container, text="Aadhar Number:").grid(row=0, column=0, padx=10, pady=10, sticky="e")
         self.ent_aadhar = ttk.Entry(container, width=30)
         self.ent_aadhar.grid(row=0, column=1, padx=10, pady=10)
 
-        ttk.Label(container, text="New Mobile Number:").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+        ttk.Label(container, text="New Mobile:").grid(row=1, column=0, padx=10, pady=10, sticky="e")
         self.ent_mobile = ttk.Entry(container, width=30)
         self.ent_mobile.grid(row=1, column=1, padx=10, pady=10)
 
-        ttk.Button(container, text="Update Profile", command=self.submit).grid(row=2, column=0, columnspan=2, pady=20)
+        ttk.Button(container, text="Update Contact", command=self.submit).grid(row=2, column=0, columnspan=2, pady=20)
 
     def submit(self):
         aadhar = self.ent_aadhar.get()
@@ -345,7 +307,7 @@ class UpdateProfilePanel(BasePanel):
                 cursor = conn.cursor()
                 cursor.execute("UPDATE Person SET mobile = %s WHERE aadhar = %s;", (mobile, aadhar))
                 conn.commit()
-                messagebox.showinfo("Success", "Profile updated.")
+                messagebox.showinfo("Success", "Profile Updated.")
                 self.ent_aadhar.delete(0, 'end')
                 self.ent_mobile.delete(0, 'end')
             except Exception as e:
@@ -355,11 +317,15 @@ class UpdateProfilePanel(BasePanel):
         else:
             messagebox.showwarning("Error", "All fields required.")
 
-# --- ALIASES FOR COMPATIBILITY ---
-# This ensures your navigation.py (which uses old names) still works
+# --- ALIASES (Legacy Support) ---
+# These map the old class names to the new modern ones
 ViewComplaintsPanel_ = ViewComplaintsPanel
-ISSUENOTICEPANEL = IssueNoticePanel
-MESSATTENDANCEPANEL = MessAttendancePanel
-VIEWMENUPANEL = ViewMenuPanel
-UPDATEMENUPANEL = UpdateMenuPanel
 ViewNoticesPanel___ = ViewNoticesPanel
+
+if __name__ == "__main__":
+    # Simple test runner
+    root = tk.Tk()
+    root.geometry("1000x800")
+    panel = ViewComplaintsPanel(root)
+    panel.pack(fill="both", expand=True)
+    root.mainloop()

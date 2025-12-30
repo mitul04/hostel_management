@@ -1,2 +1,2 @@
 STAFF = 1
-HOSTELLER    = 2
+HOSTELLER = 2

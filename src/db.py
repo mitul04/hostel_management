@@ -1,53 +1,59 @@
-import constants
 import psycopg2
+import constants
 
+# Central Configuration - The only place your password exists
+DB_PARAMS = {
+    'host': "localhost",
+    'port': "5432",
+    'database': "hostel_mgmt",
+    'user': "postgres",
+    'password': "@Diablo60" # Your password
+}
 
-
-def getConnection():
+def get_db_connection():
+    """
+    Creates and returns a connection to the database.
+    Returns None if connection fails.
+    """
     try:
-        # Database connection parameters
-        host = "localhost"  # or your host
-        database = "hms"
-        user = "hms_user"
-        password = "pass8967"
-        # Attempt to connect to the PostgreSQL database
-        connection = psycopg2.connect(
-            host=host,
-            database=database,
-            user=user,
-            password=password
-        )
+        connection = psycopg2.connect(**DB_PARAMS)
+        return connection
     except Exception as error:
+        print(f"Error connecting to database: {error}")
         return None
-    return connection
 
-def closeConnection(connection):
-    try:
-        connection.close()
-    except Exception as error:
-        print("Unable to close database connection")
-
-def login(user,password):
+def login(username, password):
+    """
+    Checks credentials and returns the user role (STAFF or HOSTELLER).
+    Returns None if login fails.
+    """
     connection = None
     try:
-        # Attempt to connect to the PostgreSQL database
-        connection = getConnection()
+        connection = get_db_connection()
+        if not connection:
+            return None
+            
         cursor = connection.cursor()
-        query ="SELECT person_type FROM login where username= %s and password = %s ;"
-        data =(user,password)
-        cursor.execute(query,data)
-        rows = cursor.fetchall()
-        if rows[0][0] == "staff":
-            return constants.STAFF
-        if rows[0][0] == "hosteller":
-            return constants.HOSTELLER
-
+        
+        # simplified query
+        query = "SELECT person_type FROM login WHERE username = %s AND password = %s;"
+        cursor.execute(query, (username, password))
+        
+        row = cursor.fetchone()
+        
+        if row:
+            person_type = row[0]
+            if person_type == "staff":
+                return constants.STAFF
+            elif person_type == "hosteller":
+                return constants.HOSTELLER
+        
+        return None # Login failed
 
     except Exception as error:
-        print(f"Error while connecting to PostgreSQL: {error}")
+        print(f"Login Error: {error}")
+        return None
 
     finally:
-        # Close the connection
-        closeConnection(connection)
-
-login("john_doe","password123")
+        if connection:
+            connection.close()

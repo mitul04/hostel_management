@@ -1,101 +1,93 @@
 import tkinter as tk
-import tk_modified as tk2
+from tkinter import ttk
+
 class AddStaffPanel(tk.Frame):
-    def __init__(self, parent,options_panel):
-        super().__init__(parent,width=1000, height=750)
+    def __init__(self, parent, options_panel):
+        super().__init__(parent)
         self.pack_propagate(False)
-        self.config(bg="cyan")
-
+        self.config(bg="#f0f0f0")  # Clean light gray background
         self.options_panel = options_panel
-        self.label_name = tk2.LabelField(self, text="Name:")
-        self.label_name.place(x=30, y=80)
 
-        self.entry_name = tk2.EntryField(self)
-        self.entry_name.place(x=130, y=80)
+        # --- STYLE CONFIGURATION ---
+        style = ttk.Style()
+        style.theme_use('clam') 
+        style.configure("TLabel", background="#f0f0f0", font=("Segoe UI", 11))
+        style.configure("TButton", font=("Segoe UI", 11, "bold"), padding=6)
+        style.configure("TRadiobutton", background="#f0f0f0", font=("Segoe UI", 11))
 
-        self.label_aadhar = tk2.LabelField(self, text="Aadhar:")
-        self.label_aadhar.place(x=30, y=130)
+        # --- HEADER ---
+        header_frame = tk.Frame(self, bg="#2c3e50", height=70)
+        header_frame.pack(fill="x", side="top")
+        
+        lbl_title = tk.Label(header_frame, text="ADD STAFF MEMBER", 
+                             font=("Segoe UI", 18, "bold"), 
+                             bg="#2c3e50", fg="white")
+        lbl_title.pack(pady=15)
 
-        self.entry_aadhar = tk2.EntryField(self)
-        self.entry_aadhar.place(x=130, y=130)
+        # --- SCROLLABLE CONTENT (Optional but good for small screens) ---
+        # For now, we will use a central frame
+        content_frame = tk.Frame(self, bg="#f0f0f0")
+        content_frame.pack(fill="both", expand=True, padx=50, pady=20)
 
-        self.label_mobile = tk2.LabelField(self, text="Mobile:")
-        self.label_mobile.place(x=30, y=160)
+        # --- FORM FIELDS ---
+        # (Label Text, Variable Name, Show Password?)
+        form_fields = [
+            ("Full Name:", "entry_name", False),
+            ("Aadhar Number:", "entry_aadhar", False),
+            ("Mobile Number:", "entry_mobile", False),
+            ("House Name:", "entry_house_name", False),
+            ("House No:", "entry_house_no", False),
+            ("Street:", "entry_street", False),
+            ("District:", "entry_district", False),
+            ("State:", "entry_state", False),
+            ("Pin Code:", "entry_pin", False),
+            ("Username:", "entry_username", False),
+            ("Password:", "entry_password", True)
+        ]
 
-        self.entry_mobile = tk2.EntryField(self)
-        self.entry_mobile.place(x=130, y=160)
+        self.entries = {}  # Store entry widgets to access them later
 
-        self.label_role = tk2.LabelField(self, text="Role:")
-        self.label_role.place(x=30, y=200)
+        # Generate form using Grid
+        for i, (text, key, is_password) in enumerate(form_fields):
+            # Label
+            lbl = ttk.Label(content_frame, text=text)
+            lbl.grid(row=i, column=0, sticky="e", padx=15, pady=8)
 
-        self.label_house_name = tk2.LabelField(self, text="House name:")
-        self.label_house_name.place(x=30, y=240)
+            # Entry
+            if is_password:
+                ent = ttk.Entry(content_frame, width=35, show="*")
+            else:
+                ent = ttk.Entry(content_frame, width=35)
+            
+            ent.grid(row=i, column=1, sticky="w", padx=15, pady=8)
+            self.entries[key] = ent
+            
+            # Map old variable names to new dictionary for compatibility if needed
+            setattr(self, key, ent) 
 
-        self.entry_house_name = tk2.EntryField(self)
-        self.entry_house_name.place(x=130, y=240)
+        # --- ROLE SELECTION ---
+        row_idx = len(form_fields)
+        lbl_role = ttk.Label(content_frame, text="Role:")
+        lbl_role.grid(row=row_idx, column=0, sticky="e", padx=15, pady=8)
 
-        self.label_house_no = tk2.LabelField(self, text="House no:")
-        self.label_house_no.place(x=30, y=280)
+        radio_frame = tk.Frame(content_frame, bg="#f0f0f0")
+        radio_frame.grid(row=row_idx, column=1, sticky="w", padx=15, pady=8)
 
-        self.entry_house_no = tk2.EntryField(self)
-        self.entry_house_no.place(x=130, y=280)
+        self.role_var = tk.StringVar(value="User")
+        
+        # Fixed logic: Values are now distinct (Warden vs Chef vs Admin)
+        roles = [("User", "User"), ("Warden", "Warden"), ("Chef", "Chef"), ("Admin", "Admin")]
+        
+        for text, value in roles:
+            rbtn = ttk.Radiobutton(radio_frame, text=text, variable=self.role_var, value=value)
+            rbtn.pack(side="left", padx=10)
 
-        self.label_street = tk2.LabelField(self, text="Street:")
-        self.label_street.place(x=30, y=320)
+        # --- BUTTONS ---
+        btn_frame = tk.Frame(content_frame, bg="#f0f0f0")
+        btn_frame.grid(row=row_idx + 1, column=0, columnspan=2, pady=30)
 
-        self.entry_street = tk2.EntryField(self)
-        self.entry_street.place(x=130, y=320)
+        self.add_button = ttk.Button(btn_frame, text="Add Staff", width=15)
+        self.add_button.pack(side="left", padx=10)
 
-        self.label_district = tk2.LabelField(self, text="District:")
-        self.label_district.place(x=30, y=360)
-
-        self.entry_district = tk2.EntryField(self)
-        self.entry_district.place(x=130, y=360)
-
-        self.label_state = tk2.LabelField(self, text="State:")
-        self.label_state.place(x=30, y=400)
-
-        self.entry_state = tk2.EntryField(self)
-        self.entry_state.place(x=130, y=400)
-
-        self.label_pin = tk2.LabelField(self, text="Pin code:")
-        self.label_pin.place(x=30, y=440)
-
-        self.entry_pin = tk2.EntryField(self)
-        self.entry_pin.place(x=130, y=440)
-
-        self.label_username = tk2.LabelField(self, text="Username:")
-        self.label_username.place(x=30, y=480)
-
-        self.entry_username = tk2.EntryField(self)
-        self.entry_username.place(x=130, y=480)
-
-        self.label_password = tk2.LabelField(self, text="Password:")
-        self.label_password.place(x=30, y=480)
-
-        self.entry_password = tk2.EntryField(self)
-        self.entry_password.place(x=130, y=480)
-
-
-
-        self.role_var = tk.StringVar(value="User")  # Default value
-
-        self.radio_user = tk.Radiobutton(self, text="User", variable=self.role_var, value="User", font=('Arial', 12))
-        self.radio_user.place(x=130, y=200)
-
-        self.radio_warden = tk.Radiobutton(self, text="Warden", variable=self.role_var, value="Admin", font=('Arial', 12))
-        self.radio_warden.place(x=200, y=200)
-
-        self.radio_cheff = tk.Radiobutton(self, text="Cheff", variable=self.role_var, value="Admin", font=('Arial', 12))
-        self.radio_cheff.place(x=292, y=200)
-
-        self.radio_admin = tk.Radiobutton(self, text="Admin", variable=self.role_var, value="Admin", font=('Arial', 12))
-        self.radio_admin.place(x=366, y=200)
-
-        self.clear_button = tk.Button(self, text="Clear", width=10, font=('Arial', 12))
-        self.clear_button.place(x=40, y=520)
-        self.add_button = tk.Button(self, text="Add", width=10, font=('Arial', 12))
-        self.add_button.place(x=180, y=520)
-
-        self.title = tk.Label(self, text="ADD STAFF", font=('Arial', 16))
-        self.title.place(x=80, y=40)
+        self.clear_button = ttk.Button(btn_frame, text="Clear Form", width=15)
+        self.clear_button.pack(side="left", padx=10)

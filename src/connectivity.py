@@ -5,7 +5,7 @@ import psycopg2
 db_params = {
     'dbname': 'hostel_mgmt',
     'user': 'postgres',
-    'password': 'pass4096',
+    'password': 'xxxxxx',
     'host': 'localhost',  # or your database server address
     'port': '5432'        # default PostgreSQL port
 }
@@ -18,10 +18,20 @@ try:
 
     # Fetch the result
     db_version = cursor.fetchone()
-    print("PostgreSQL Database Version:", db_version)
+    print("\nPostgreSQL Database Version:", db_version)
 
-    # Execute a simple SQL command
-    cursor.execute("SELECT * FROM District;")
+    # Correct way to list tables in PostgreSQL
+    cursor.execute("""
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public';
+    """)
+
+    # Fetch the result
+    tables = cursor.fetchall()
+    print("\nTables in database:")
+    for table in tables:
+        print(table[0])
 
     # Fetch the result
     records = cursor.fetchall()
@@ -37,26 +47,3 @@ finally:
         cursor.close()
     if connection:
         connection.close()
-
-#
-#class MainApplication(tk.Tk):
-#   def __init__(self):
-    #    super().__init__()
-    #    self.title("Organizing Panels with Classes")
-    #    self.geometry("1200x900")
-    #    self.bottom_panel = Panel1(self)
-    #    self.bottom_panel.pack(padx=10, pady=10)
-
-#class Panel1(tk.Frame):
-#    def __init__(self, parent):
-#        super().__init__(parent,width=1000, height=750)
-#        self.pack_propagate(False)
-#        self.config(bg="lightgreen")
-#        # add your designs in this function
-
-
-# create panels for each of the pages as classes and write the design inside __init__() function
-# Main execution
-#if __name__ == "__main__":
-#    app = MainApplication()
-#    app.mainloop()
